@@ -1,31 +1,41 @@
 import { useState } from "react";
+import axios from "axios";
 import "../src/Login.css";
 
 function Login() {
-
-    const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Name:", name);
-        console.log("Password:", password);
+        setError("");
+        setLoading(true);
+        try {
+            await axios.post("http://localhost:8080/api/auth/login", { username, password });
+            window.location.href = "/goods";
+        } catch (err) {
+            setError("Username yoki parol noto'g'ri.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="login-container">
             <div className="login-card">
                 <h2>Welcome Back 👋</h2>
-                <p className="subtitle">Please login to your account</p>
+                <p className="subtitle">Hisobingizga kiring</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className="input-group">
-                        <label>Ism</label>
+                        <label>Username</label>
                         <input
-                            type="name"
-                            placeholder="Ismingizni kiriting name"
-                            value={name}
-                            onChange={(e)=>setName(e.target.value)}
+                            type="text"
+                            placeholder="Username kiriting"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
                         />
                     </div>
@@ -33,20 +43,20 @@ function Login() {
                     <div className="input-group">
                         <label>Parol</label>
                         <input
-                            type="parol"
+                            type="password"
                             placeholder="Parol kiriting"
                             value={password}
-                            onChange={(e)=>setPassword(e.target.value)}
+                            onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     </div>
 
-                    <button type="submit" className="login-btn">
-                        Login
+                    {error && <p style={{ color: "red", fontSize: "13px" }}>{error}</p>}
+
+                    <button type="submit" className="login-btn" disabled={loading}>
+                        {loading ? "Kirilmoqda..." : "Kirish"}
                     </button>
                 </form>
-
-
             </div>
         </div>
     );
