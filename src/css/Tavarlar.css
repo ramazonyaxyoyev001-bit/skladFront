@@ -1,0 +1,36 @@
+.containerr{
+    padding:40px;
+    background:#f4f6f9;
+    min-height:100vh;
+    font-family:Arial;
+}
+
+.title{
+    margin-bottom:25px;
+    color:#333;
+}
+
+.modern-table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
+
+.modern-table th{
+    background:#2563eb;
+    color:white;
+    padding:15px;
+    text-align:left;
+}
+
+.modern-table td{
+    padding:14px;
+    border-bottom:1px solid #eee;
+}
+
+.modern-table tr:hover{
+    background:#f1f5ff;
+}
