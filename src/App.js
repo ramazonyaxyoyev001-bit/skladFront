@@ -6,6 +6,7 @@ import Hisobotlar from "./pages/Hisobotlar";
 import Qarzlar from "./pages/Qarzlar";
 import Login from "./Login";
 import "./App.css";
+import Skladlar from "./pages/Skladlar";
 
 function AppContent() {
   const [open, setOpen] = useState(false);
@@ -24,6 +25,7 @@ function AppContent() {
             <NavLink to="/documents">Hujjatlar</NavLink>
             <NavLink to="/reports">Hisobotlar</NavLink>
             <NavLink to="/debts">Qarzlar</NavLink>
+             <NavLink to="/skladlar">Skladlar</NavLink>
           </div>
         </>
       )}
@@ -35,6 +37,7 @@ function AppContent() {
           <Route path="/documents" element={<Hujjatlar />} />
           <Route path="/reports" element={<Hisobotlar />} />
           <Route path="/debts" element={<Qarzlar />} />
+          <Route path="/skladlar" element={<Skladlar />} />
         </Routes>
       </div>
     </div>
