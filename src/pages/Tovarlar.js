@@ -3,310 +3,58 @@ import axios from "axios";
 
 const API = "http://localhost:8080/api/products";
 
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+function Toast({ msg, onClose }) {
+  useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
+  return (
+    <div style={{
+      position: "fixed", bottom: 32, right: 32,
+      background: "#f0fdf4", border: "1px solid #86efac",
+      borderLeft: "4px solid #22c55e", color: "#15803d",
+      padding: "14px 20px", borderRadius: 10,
+      fontFamily: "'Segoe UI', sans-serif", fontSize: 13,
+      boxShadow: "0 4px 20px rgba(0,0,0,.1)", zIndex: 200,
+    }}>
+      {msg}
+    </div>
+  );
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: #0d0f14;
-    color: #e8e6e1;
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-  }
-
-  .page {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 48px 24px;
-  }
-
-  .header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 40px;
-  }
-
-  .title-block .eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #c8b560;
-    margin-bottom: 6px;
-  }
-
-  .title-block h1 {
-    font-size: 36px;
-    font-weight: 800;
-    color: #f0ede8;
-    line-height: 1;
-  }
-
-  .add-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #c8b560;
-    color: #0d0f14;
-    border: none;
-    padding: 12px 22px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-  }
-  .add-btn:hover { background: #dfc96e; transform: translateY(-1px); }
-  .add-btn svg { width: 16px; height: 16px; }
-
-  /* TABLE */
-  .table-wrap {
-    border: 1px solid #1e2230;
-    overflow: hidden;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-
-  thead tr {
-    background: #131620;
-    border-bottom: 2px solid #c8b560;
-  }
-
-  thead th {
-    padding: 14px 20px;
-    text-align: left;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #c8b560;
-  }
-
-  tbody tr {
-    border-bottom: 1px solid #1a1d28;
-    transition: background 0.15s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: #131620; }
-
-  tbody td {
-    padding: 16px 20px;
-    color: #ccc9c0;
-  }
-
-  .code-cell {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: #c8b560 !important;
-    background: #1a1d28;
-    padding: 4px 8px;
-    display: inline-block;
-  }
-
-  .qty-cell {
-    font-family: 'DM Mono', monospace;
-    font-weight: 500;
-    color: #e8e6e1 !important;
-  }
-
-  .empty-row td {
-    text-align: center;
-    padding: 48px;
-    color: #3a3d50;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 1px;
-  }
-
-  /* MODAL */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    animation: fadeIn 0.2s ease;
-  }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-
-  .modal {
-    background: #13151f;
-    border: 1px solid #1e2230;
-    border-top: 3px solid #c8b560;
-    width: 100%;
-    max-width: 440px;
-    padding: 36px;
-    animation: slideUp 0.25s ease;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 28px;
-  }
-
-  .modal-header h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: #f0ede8;
-  }
-
-  .close-btn {
-    background: none;
-    border: 1px solid #2a2d3a;
-    color: #888;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .close-btn:hover { border-color: #c8b560; color: #c8b560; }
-
-  .field {
-    margin-bottom: 20px;
-  }
-
-  .field label {
-    display: block;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #888;
-    margin-bottom: 8px;
-  }
-
-  .field input {
-    width: 100%;
-    background: #0d0f14;
-    border: 1px solid #1e2230;
-    color: #e8e6e1;
-    padding: 12px 14px;
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .field input:focus { border-color: #c8b560; }
-  .field input::placeholder { color: #3a3d50; }
-
-  .modal-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 28px;
-  }
-
-  .submit-btn {
-    flex: 1;
-    background: #c8b560;
-    color: #0d0f14;
-    border: none;
-    padding: 13px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .submit-btn:hover:not(:disabled) { background: #dfc96e; }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .cancel-btn {
-    flex: 1;
-    background: transparent;
-    color: #888;
-    border: 1px solid #2a2d3a;
-    padding: 13px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .cancel-btn:hover { border-color: #888; color: #ccc; }
-
-  .error-msg {
-    margin-top: 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: #e05c5c;
-    letter-spacing: 0.5px;
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    background: #1a2a1a;
-    border: 1px solid #3a6a3a;
-    border-left: 4px solid #5ab05a;
-    color: #9dd49d;
-    padding: 14px 20px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    animation: slideUp 0.3s ease;
-    z-index: 200;
-  }
-`;
+function Field({ label, children }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={styles.label}>{label}</label>
+      {children}
+    </div>
+  );
+}
 
 export default function Tovarlar() {
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({code:"", name: "", meterKvadrat: "" });
+  const [form, setForm] = useState({ code: "", name: "", meterKvadrat: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
   const fetchProducts = () => {
-    axios.get(API).then((res) => setProducts(res.data)).catch(console.error);
+    axios.get(API).then(res => setProducts(res.data)).catch(console.error);
   };
 
   useEffect(() => { fetchProducts(); }, []);
 
   const openModal = () => {
-    setForm({code:"", name: "", meterKvadrat: "" });
+    setForm({ code: "", name: "", meterKvadrat: "" });
     setError("");
     setShowModal(true);
   };
 
-  const closeModal = () => setShowModal(false);
-
-  const handleChange = (e) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-  };
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
     if (!form.name.trim()) { setError("Mahsulot nomi kiritilishi shart."); return; }
     if (!form.meterKvadrat || isNaN(Number(form.meterKvadrat))) {
-      setError("Metr kvadrat raqam bo'lishi kerak.");
-      return;
+      setError("Metr kvadrat raqam bo'lishi kerak."); return;
     }
-
     setLoading(true);
     setError("");
     try {
@@ -316,9 +64,8 @@ export default function Tovarlar() {
         meterKvadrat: parseFloat(form.meterKvadrat),
       });
       fetchProducts();
-      closeModal();
+      setShowModal(false);
       setToast("Mahsulot muvaffaqiyatli qo'shildi!");
-      setTimeout(() => setToast(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Xatolik yuz berdi.");
     } finally {
@@ -327,109 +74,144 @@ export default function Tovarlar() {
   };
 
   return (
-    <>
-      <style>{styles}</style>
-
-      <div className="page">
-        <div className="header">
-          <div className="title-block">
-            <p className="eyebrow">Ombor tizimi</p>
-            <h1>Tovarlar</h1>
-          </div>
-          <button className="add-btn" onClick={openModal}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Yangi tovar
-          </button>
+    <div style={styles.page}>
+      {/* header */}
+      <div style={styles.header}>
+        <div>
+          <h1 style={styles.h1}>Tovarlar</h1>
+          <p style={styles.sub}>{products.length} ta mahsulot ro'yxati</p>
         </div>
+        <button style={styles.addBtn} onClick={openModal}>+ Yangi tovar</button>
+      </div>
 
-        <div className="table-wrap">
-          <table>
+      {/* table */}
+      {products.length === 0 ? (
+        <div style={styles.empty}>Hozircha mahsulot yo'q</div>
+      ) : (
+        <div style={styles.tableWrap}>
+          <table style={styles.table}>
             <thead>
               <tr>
-                <th>Kodi</th>
-                <th>Nomi</th>
-                <th>Metr²</th>
-                <th>Soni</th>
+                {["Kodi", "Nomi", "Metr²", "Soni"].map(h => (
+                  <th key={h} style={styles.th}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {products.length === 0 ? (
-                <tr className="empty-row">
-                  <td colSpan={4}>— Mahsulotlar yo'q —</td>
+              {products.map(item => (
+                <tr key={item.id} style={styles.tr}>
+                  <td style={styles.td}>
+                    <span style={{ fontFamily: "monospace", fontSize: 12, background: "#eff6ff", color: "#2563eb", padding: "3px 8px", borderRadius: 5 }}>
+                      {item.code ?? "—"}
+                    </span>
+                  </td>
+                  <td style={{ ...styles.td, fontWeight: 500, color: "#0f172a" }}>{item.name}</td>
+                  <td style={styles.td}>{item.meterKvadrat ?? "—"} m²</td>
+                  <td style={{ ...styles.td, fontFamily: "monospace", fontWeight: 700, color: "#0f172a" }}>
+                    {item.quantity ?? 0}
+                  </td>
                 </tr>
-              ) : (
-                products.map((item) => (
-                  <tr key={item.id}>
-                    <td><span className="code-cell">{item.code ?? "—"}</span></td>
-                    <td>{item.name}</td>
-                    <td>{item.meterKvadrat ?? "—"}</td>
-                    <td className="qty-cell">{item.quantity ?? 0}</td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
 
-      {/* ADD PRODUCT MODAL */}
+      {/* modal */}
       {showModal && (
-        <div className="overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Yangi tovar qo'shish</h2>
-              <button className="close-btn" onClick={closeModal}>×</button>
+        <div style={styles.overlay} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <span style={styles.modalTitle}>Yangi tovar qo'shish</span>
+              <button style={styles.closeBtn} onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <div className="field">
-              <label>Mahsulot kodi</label>
-              <input
-                name="code"
-                value={form.code}
-                onChange={handleChange}
-                placeholder="Masalan: PLT-001"
-                autoFocus
-              />
-            </div>
+            <div style={styles.modalBody}>
+              <Field label="Mahsulot kodi">
+                <input
+                  name="code" value={form.code} onChange={handleChange}
+                  placeholder="Masalan: PLT-001" style={styles.input} autoFocus
+                />
+              </Field>
+              <Field label="Mahsulot nomi">
+                <input
+                  name="name" value={form.name} onChange={handleChange}
+                  placeholder="Masalan: Granit plitka" style={styles.input}
+                />
+              </Field>
+              <Field label="Metr kvadrat (m²)">
+                <input
+                  name="meterKvadrat" type="number" min="0" step="0.01"
+                  value={form.meterKvadrat} onChange={handleChange}
+                  placeholder="Masalan: 2.5" style={styles.input}
+                />
+              </Field>
 
-            <div className="field">
-              <label>Mahsulot nomi</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Masalan: Granit plitka"
-                autoFocus
-              />
-            </div>
+              {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 8 }}>⚠ {error}</p>}
 
-            <div className="field">
-              <label>Metr kvadrat (m²)</label>
-              <input
-                name="meterKvadrat"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.meterKvadrat}
-                onChange={handleChange}
-                placeholder="Masalan: 2.5"
-              />
-            </div>
-
-            {error && <p className="error-msg">⚠ {error}</p>}
-
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={closeModal}>Bekor</button>
-              <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-                {loading ? "Saqlanmoqda…" : "Saqlash"}
-              </button>
+              <div style={styles.modalFooter}>
+                <button style={styles.cancelBtn} onClick={() => setShowModal(false)}>Bekor</button>
+                <button style={styles.saveBtn} onClick={handleSubmit} disabled={loading}>
+                  {loading ? "Saqlanmoqda…" : "Saqlash"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {toast && <div className="toast">✓ {toast}</div>}
-    </>
+      {toast && <Toast msg={toast} onClose={() => setToast("")} />}
+    </div>
   );
 }
+
+const styles = {
+  page:      { padding: "24px", fontFamily: "'Segoe UI', sans-serif", color: "#1e293b" },
+  header:    { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 },
+  h1:        { margin: 0, fontSize: 26, fontWeight: 700, color: "#0f172a" },
+  sub:       { margin: "4px 0 0", color: "#64748b", fontSize: 14 },
+  addBtn: {
+    background: "#2563eb", color: "#fff", border: "none",
+    padding: "10px 20px", borderRadius: 8, cursor: "pointer",
+    fontWeight: 600, fontSize: 14,
+  },
+  tableWrap: { overflowX: "auto", borderRadius: 12, boxShadow: "0 1px 8px rgba(0,0,0,.08)" },
+  table:     { width: "100%", borderCollapse: "collapse", background: "#fff" },
+  th: {
+    background: "#f1f5f9", padding: "12px 14px", textAlign: "left",
+    fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase",
+    letterSpacing: ".04em", whiteSpace: "nowrap",
+  },
+  tr:   { borderBottom: "1px solid #f1f5f9" },
+  td:   { padding: "12px 14px", fontSize: 14, color: "#475569", whiteSpace: "nowrap" },
+  empty: { textAlign: "center", padding: 48, color: "#94a3b8", fontSize: 16 },
+  overlay: {
+    position: "fixed", inset: 0, background: "rgba(15,23,42,.45)",
+    display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+  },
+  modal: {
+    background: "#fff", borderRadius: 14, width: "100%", maxWidth: 460,
+    boxShadow: "0 20px 60px rgba(0,0,0,.2)", overflow: "hidden",
+  },
+  modalHeader: {
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "18px 22px", borderBottom: "1px solid #f1f5f9",
+  },
+  modalTitle: { fontWeight: 700, fontSize: 17, color: "#0f172a" },
+  closeBtn:   { background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#94a3b8" },
+  modalBody:  { padding: "22px" },
+  modalFooter: { display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 },
+  label: { display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 },
+  input: {
+    width: "100%", padding: "9px 12px", border: "1.5px solid #e2e8f0",
+    borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box",
+    color: "#0f172a", background: "#f8fafc",
+  },
+  cancelBtn: {
+    padding: "9px 18px", border: "1.5px solid #e2e8f0", borderRadius: 8,
+    background: "#fff", cursor: "pointer", fontWeight: 600, fontSize: 14, color: "#64748b",
+  },
+  saveBtn: {
+    padding: "9px 22px", border: "none", borderRadius: 8,
+    background: "#2563eb", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14,
+  },
+};
