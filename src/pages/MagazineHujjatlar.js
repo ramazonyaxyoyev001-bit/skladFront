@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API       = "http://localhost:8080/api/magazine/products";
-const KIRIM_API = "http://localhost:8080/api/magazine/products/kirim";
+const API       = "https://stock-production-703f.up.railway.app/api/magazine/products";
+const KIRIM_API = "https://stock-production-703f.up.railway.app/api/magazine/products/kirim";
+
 
 const css = `
   @keyframes fadeIn {

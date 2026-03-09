@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "https://stock-production-703f.up.railway.app/api";
 
 function Modal({ title, onClose, children }) {
   return (

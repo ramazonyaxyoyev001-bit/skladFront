@@ -13,7 +13,7 @@ function Login() {
         setError("");
         setLoading(true);
         try {
-            await axios.post("http://localhost:8080/api/auth/login", { username, password });
+            await axios.post("https://stock-production-703f.up.railway.app/api/auth/login", { username, password });
             window.location.href = "/goods";
         } catch (err) {
             setError("Username yoki parol noto'g'ri.");

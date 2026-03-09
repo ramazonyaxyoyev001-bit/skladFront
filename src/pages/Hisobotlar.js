@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://localhost:8080/api";
+const API = "https://stock-production-703f.up.railway.app/api";
 
 const today = () => new Date().toISOString().split("T")[0];
 
