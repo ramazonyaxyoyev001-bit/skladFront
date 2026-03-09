@@ -1,12 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import "../src/Login.css";
+import {useNavigate} from "react-router-dom";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,7 +16,7 @@ function Login() {
         setLoading(true);
         try {
             await axios.post("https://stock-production-703f.up.railway.app/api/auth/login", { username, password });
-            window.location.href = "/goods";
+            navigate("/goods");
         } catch (err) {
             setError("Username yoki parol noto'g'ri.");
         } finally {
