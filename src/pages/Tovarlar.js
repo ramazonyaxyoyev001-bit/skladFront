@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://stock-production-703f.up.railway.app/api/products";
+const API = "http://localhost:8080/api/products";
 
-function Toast({ msg, onClose }) {
+function Toast({ msg, type = "success", onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
+  const isSuccess = type === "success";
   return (
     <div style={{
       position: "fixed", bottom: 32, right: 32,
-      background: "#f0fdf4", border: "1px solid #86efac",
-      borderLeft: "4px solid #22c55e", color: "#15803d",
+      background: isSuccess ? "#f0fdf4" : "#fef2f2",
+      border: `1px solid ${isSuccess ? "#86efac" : "#fca5a5"}`,
+      borderLeft: `4px solid ${isSuccess ? "#22c55e" : "#ef4444"}`,
+      color: isSuccess ? "#15803d" : "#b91c1c",
       padding: "14px 20px", borderRadius: 10,
       fontFamily: "'Segoe UI', sans-serif", fontSize: 13,
       boxShadow: "0 4px 20px rgba(0,0,0,.1)", zIndex: 200,
@@ -28,13 +31,40 @@ function Field({ label, children }) {
   );
 }
 
+function ConfirmModal({ product, onConfirm, onCancel, loading }) {
+  return (
+    <div style={styles.overlay} onClick={e => e.target === e.currentTarget && onCancel()}>
+      <div style={{ ...styles.modal, maxWidth: 400 }}>
+        <div style={styles.modalHeader}>
+          <span style={styles.modalTitle}>Mahsulotni o'chirish</span>
+          <button style={styles.closeBtn} onClick={onCancel}>✕</button>
+        </div>
+        <div style={styles.modalBody}>
+          <p style={{ margin: "0 0 20px", color: "#475569", fontSize: 14, lineHeight: 1.6 }}>
+            <strong style={{ color: "#0f172a" }}>{product.name}</strong> mahsulotini o'chirishni tasdiqlaysizmi?
+            Bu amalni ortga qaytarib bo'lmaydi.
+          </p>
+          <div style={styles.modalFooter}>
+            <button style={styles.cancelBtn} onClick={onCancel}>Bekor</button>
+            <button style={styles.deleteConfirmBtn} onClick={onConfirm} disabled={loading}>
+              {loading ? "O'chirilmoqda…" : "O'chirish"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Tovarlar() {
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ code: "", name: "", meterKvadrat: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null); // { msg, type }
+  const [deleteTarget, setDeleteTarget] = useState(null); // product to delete
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchProducts = () => {
     axios.get(API).then(res => setProducts(res.data)).catch(console.error);
@@ -65,11 +95,28 @@ export default function Tovarlar() {
       });
       fetchProducts();
       setShowModal(false);
-      setToast("Mahsulot muvaffaqiyatli qo'shildi!");
+      setToast({ msg: "Mahsulot muvaffaqiyatli qo'shildi!", type: "success" });
     } catch (err) {
       setError(err.response?.data?.message || "Xatolik yuz berdi.");
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`${API}/${deleteTarget.id}`);
+      fetchProducts();
+      setDeleteTarget(null);
+      setToast({ msg: "Mahsulot o'chirildi.", type: "error" });
+    } catch (err) {
+      setToast({ msg: err.response?.data?.message || "O'chirishda xatolik.", type: "error" });
+      setDeleteTarget(null);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -92,8 +139,8 @@ export default function Tovarlar() {
           <table style={styles.table}>
             <thead>
               <tr>
-                {["Kodi", "Nomi", "Metr²", "Soni"].map(h => (
-                  <th key={h} style={styles.th}>{h}</th>
+                {["Kodi", "Nomi", "Metr²", "Soni", ""].map((h, i) => (
+                  <th key={i} style={styles.th}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -110,6 +157,15 @@ export default function Tovarlar() {
                   <td style={{ ...styles.td, fontFamily: "monospace", fontWeight: 700, color: "#0f172a" }}>
                     {item.quantity ?? 0}
                   </td>
+                  <td style={{ ...styles.td, textAlign: "right" }}>
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={() => setDeleteTarget(item)}
+                      title="O'chirish"
+                    >
+                      🗑
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -117,7 +173,7 @@ export default function Tovarlar() {
         </div>
       )}
 
-      {/* modal */}
+      {/* add modal */}
       {showModal && (
         <div style={styles.overlay} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div style={styles.modal}>
@@ -146,7 +202,8 @@ export default function Tovarlar() {
                 />
               </Field>
 
-              {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 8 }}>⚠ {error}</p>}
+              {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 8 }}>⚠️ {error}</p>}
+
 
               <div style={styles.modalFooter}>
                 <button style={styles.cancelBtn} onClick={() => setShowModal(false)}>Bekor</button>
@@ -159,7 +216,17 @@ export default function Tovarlar() {
         </div>
       )}
 
-      {toast && <Toast msg={toast} onClose={() => setToast("")} />}
+      {/* delete confirm modal */}
+      {deleteTarget && (
+        <ConfirmModal
+          product={deleteTarget}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleteLoading}
+        />
+      )}
+
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
@@ -213,5 +280,14 @@ const styles = {
   saveBtn: {
     padding: "9px 22px", border: "none", borderRadius: 8,
     background: "#2563eb", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14,
+  },
+  deleteBtn: {
+    background: "none", border: "1.5px solid #fecaca", borderRadius: 7,
+    padding: "5px 10px", cursor: "pointer", fontSize: 14,
+    color: "#ef4444", transition: "background .15s",
+  },
+  deleteConfirmBtn: {
+    padding: "9px 22px", border: "none", borderRadius: 8,
+    background: "#ef4444", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14,
   },
 };
